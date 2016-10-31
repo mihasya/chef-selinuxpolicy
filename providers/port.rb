@@ -6,7 +6,10 @@ def whyrun_supported?
 end
 
 def port_defined(protocol, port, label = nil)
-  base_command = "seinfo --protocol=#{protocol} --portcon=#{port} | awk -F: '$(NF-1) !~ /reserved_port_t$/ {print $(NF-1)}'"
+  # list all matches to this protocol definition, but exclude ones where it is
+  # part of a range calling semanage -m on a port that is only defined as part
+  # of a range causes it to fail
+  base_command = "seinfo --protocol=#{protocol} --portcon=#{port} | grep -vP '[\d+]-[\d+]' | awk -F: '$(NF-1) !~ /reserved_port_t$/ {print $(NF-1)}'"
   grep = if label
            "grep -P '#{Regexp.escape(label)}'"
          else
